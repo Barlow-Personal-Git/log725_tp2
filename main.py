@@ -7,6 +7,7 @@ from src.block.blue_block import Blue_Block
 from src.block.green_block import Green_Block
 from src.block.floor import Floor
 from src.item.bullet import Bullet
+from src.item.ammo import Ammo
 from src.bullet_display import BulletDisplay
 from src.observer.goal import Goal
 from src.ecs.components import AudioComponent
@@ -17,7 +18,7 @@ pygame.init()
 
 bullet_display = BulletDisplay()
 
-# Initialize ECS (for the graphic system is in the main function)
+# Initialize ECS Audio
 audio_system = AudioSystem()
 
 MUSIC_SOUND = pygame.mixer.Sound('assets/music/Gregoire Lourme - Commando Team (Action) [loop cut].ogg')
@@ -39,8 +40,9 @@ clock = pygame.time.Clock()
 
 # Create entities
 player = Player()
+ammos = []
 bullets = []
-bullets_to_remove = []
+can_shoot = False
 
 # Walls
 walls = pygame.sprite.Group()
@@ -51,11 +53,11 @@ blocks = pygame.sprite.Group()
 
 # Items
 
-bullet_red = Bullet(RED, (432, 626))
-bullet_green = Bullet(GREEN, (336, 338))
-bullet_blue = Bullet(BLUE, (432, 50))
+ammo_red = Ammo(RED, (432, 626))
+ammo_green = Ammo(GREEN, (336, 338))
+ammo_blue = Ammo(BLUE, (432, 50))
 
-bullets.extend([bullet_red, bullet_green, bullet_blue])
+ammos.extend([ammo_red, ammo_green, ammo_blue])
 
 # Create blocks and walls
 def create_block_walls() :
@@ -139,13 +141,28 @@ def display_start_menu():
 
 # Main game loop
 def game_loop():
+    global bullets
     playing = True
     while playing:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 playing = False
             elif event.type == pygame.KEYDOWN:
-                keys = pygame.key.get_pressed()
+                if event.key == pygame.K_z:  
+                    bullet = player.shoot(RED)
+                    if bullet:
+                        bullets.append(bullet)
+                        bullet_display.decrement(bullet.color)
+                elif event.key == pygame.K_x:  
+                    bullet = player.shoot(GREEN)
+                    if bullet:
+                        bullets.append(bullet)
+                        bullet_display.decrement(bullet.color)
+                elif event.key == pygame.K_c:
+                    bullet = player.shoot(BLUE)
+                    if bullet:
+                        bullets.append(bullet)
+                        bullet_display.decrement(bullet.color)
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
@@ -183,6 +200,12 @@ def game_loop():
         # player update 
         player.update()
 
+        for bullet in bullets:
+            bullet.update(walls, blocks)
+            screen.blit(bullet.image, bullet.rect.topleft)
+
+        bullets = [bullet for bullet in bullets if not bullet.should_remove]
+
         # check for collisions between player and walls
         wall_collisions = pygame.sprite.spritecollide(player, walls, False)
         for wall_collision in wall_collisions:
@@ -202,12 +225,6 @@ def game_loop():
         block_collisions = pygame.sprite.spritecollide(player, blocks, False)
         for block_collision in block_collisions:
             if player.rect.colliderect(block_collision.rect):
-                for bullet_color in player.bullet_colors:
-                    if bullet_color == block_collision.color:
-                        blocks.remove(block_collision)
-                        bullet_display.decrement(bullet_color)
-                        break  
-
                 if player.rect.right > block_collision.rect.left and previous_rect.right <= block_collision.rect.left:
                     player.rect.right = block_collision.rect.left
                 elif player.rect.left < block_collision.rect.right and previous_rect.left >= block_collision.rect.right:
@@ -216,20 +233,15 @@ def game_loop():
                     player.rect.bottom = block_collision.rect.top
                 elif player.rect.top < block_collision.rect.bottom and previous_rect.top >= block_collision.rect.bottom:
                     player.rect.top = block_collision.rect.bottom
-        
-        for bullet in bullets:
-            if pygame.sprite.collide_rect(player, bullet):
-                bullet_display.increment(bullet.color)
-                if bullet not in bullets_to_remove :
-                    bullets_to_remove.append(bullet)
-                player.collect(bullet.color)
 
-        for bullet in bullets_to_remove[:]:  
-            if bullet in bullets:  
-                bullets.remove(bullet)
+        for ammo in ammos:
+            if pygame.sprite.collide_rect(player, ammo):
+                bullet_display.increment(ammo.color)
+                player.collect(ammo.color)
+                ammos.remove(ammo)
 
-        for bullet in bullets:
-            screen.blit(bullet.image, bullet.rect.topleft)
+        for ammo in ammos:
+            screen.blit(ammo.image, ammo.rect.topleft)
 
         bullet_display.draw(screen)
 
@@ -265,12 +277,12 @@ def reset_game():
     blocks.empty()
     create_block_walls()
 
-    bullets.clear()
+    ammos.clear()
 
-    bullet_red = Bullet(RED, (432, 626))
-    bullet_green = Bullet(GREEN, (336, 338))
-    bullet_blue = Bullet(BLUE, (432, 50))
-    bullets.extend([bullet_red, bullet_green, bullet_blue])
+    ammo_red = Ammo(RED, (432, 626))
+    ammo_green = Ammo(GREEN, (336, 338))
+    ammo_blue = Ammo(BLUE, (432, 50))
+    ammos.extend([ammo_red, ammo_green, ammo_blue])
 
     bullet_display.reset()
 
