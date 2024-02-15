@@ -6,6 +6,9 @@ Par Gabriel C. Ullmann, 2024.
 - Installez pygame : `pip install pygame`
 - Exécutez le jeu : `python main.py`
 
+# Execution
+- Pour exécuter le programme, j'ai ajouté un fichier exécutable (.exe). Veuillez cliquer sur le dossier "dist", puis sur "main.exe".
+
 ## Fonctionnalités déjà implémentées
 - 2 entités (Player et Wall)
 - Chargement des sprites pour les entités
