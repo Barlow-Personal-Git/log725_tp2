@@ -52,7 +52,6 @@ wall = Wall(0, 95, 50, 150)
 blocks = pygame.sprite.Group()
 
 # Items
-
 ammo_red = Ammo(RED, (432, 626))
 ammo_green = Ammo(GREEN, (336, 338))
 ammo_blue = Ammo(BLUE, (432, 50))
@@ -185,10 +184,12 @@ def game_loop():
         blocks.draw(screen)
         goals.draw(screen)
 
+        # Add reset button
         pygame.draw.rect(screen, (50, 100, 50), reset_button_rect)
         text_rect = reset_button.get_rect(center=reset_button_rect.center)
         screen.blit(reset_button, text_rect)
 
+        # Add goal 
         font = pygame.font.Font(None, 40)  
         text_surface = font.render("Goal", True, BLACK)  
         text_rect = text_surface.get_rect(center=(goal.rect.centerx, goal.rect.centery)) 
@@ -200,10 +201,10 @@ def game_loop():
         # player update 
         player.update()
 
+        # bullet update
         for bullet in bullets:
             bullet.update(walls, blocks)
             screen.blit(bullet.image, bullet.rect.topleft)
-
         bullets = [bullet for bullet in bullets if not bullet.should_remove]
 
         # check for collisions between player and walls
@@ -240,9 +241,11 @@ def game_loop():
                 player.collect(ammo.color)
                 ammos.remove(ammo)
 
+        # Display ammo image
         for ammo in ammos:
             screen.blit(ammo.image, ammo.rect.topleft)
 
+        # Draw bullet display board
         bullet_display.draw(screen)
 
         # single sprites are drawn with screen.blit()
@@ -270,6 +273,7 @@ def main():
         if not start_menu:
             game_loop()
 
+# Reset all values
 def reset_game():
     player.reset_position()
 
@@ -286,5 +290,6 @@ def reset_game():
 
     bullet_display.reset()
 
+# Run
 if __name__ == "__main__":
     main()
